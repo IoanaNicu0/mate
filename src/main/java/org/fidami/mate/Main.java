@@ -10,6 +10,9 @@ import java.time.Instant;
 import java.util.Random;
 import java.util.Scanner;
 
+import static org.fidami.mate.Utils.assureCarryForUnitsSubstraction;
+import static org.fidami.mate.Utils.units;
+
 public class Main {
 
     private static final String CALCULATION_TEMPLATE = "%d) %d %s %d = ";
@@ -59,10 +62,11 @@ public class Main {
         } catch (Exception e) {
             write(String.format("""
                     Summary:
+                    Total: %s
                     Right answer: %s
                     Wrong answer: %s
                     Average duration: %ds
-                    """, corecte, gresite, durata / (corecte + gresite)));
+                    """, corecte + gresite, corecte, gresite, durata / (corecte + gresite)));
         }
     }
 
@@ -73,6 +77,17 @@ public class Main {
 
         switch (operation) {
             case ADDITION: {
+                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
+                write(writtenOperation);
+                return a + b;
+            }
+            case ADDITION_CARRY: {
+                while (units(a) + units(b) < 10)
+                {
+                    a = generateNumber(min, max);
+                    b = generateNumber(min, max);
+                }
+
                 String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
                 write(writtenOperation);
                 return a + b;
@@ -88,6 +103,17 @@ public class Main {
                     return a - b;
                 } else {
                     write(String.format(CALCULATION_TEMPLATE, nrCalcul, b, operation, a));
+                    return b - a;
+                }
+            }
+            case SUBTRACTION_CARRY: {
+                if (a > b) {
+                    Terms termeni = assureCarryForUnitsSubstraction(a, b);
+                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, termeni.a(), operation, termeni.b()));
+                    return a - b;
+                } else {
+                    Terms termeni = assureCarryForUnitsSubstraction(b, a);
+                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, termeni.a(), operation, termeni.b()));
                     return b - a;
                 }
             }
@@ -123,7 +149,9 @@ public class Main {
     public static Operation getOperation(String s) {
         return switch (s) {
             case "+" -> Operation.ADDITION;
+            case "++" -> Operation.ADDITION_CARRY;
             case "-" -> Operation.SUBTRACTION;
+            case "--" -> Operation.SUBTRACTION_CARRY;
             case "x" -> Operation.MULTIPLICATION;
             case ":" -> Operation.DIVISION;
             default -> throw new IllegalArgumentException("Invalid operation: " + s);
@@ -148,7 +176,7 @@ public class Main {
         min = readNumber();
         write("max = ");
         max = readNumber();
-        write("calcul (+ - x :) = ");
+        write("calcul (+ ++ - -- x :) = ");
         op = getOperation(scanner.next());
     }
 }
