@@ -12,6 +12,7 @@ import java.util.Scanner;
 
 public class Main {
 
+    private static final String CALCULATION_TEMPLATE = "%d) %d %s %d = ";
     static long min;
     static long max;
     static Operation op;
@@ -28,7 +29,7 @@ public class Main {
                 try {
                     long startTime = System.currentTimeMillis();
 
-                    long result = generateCalculation((int) min, (int) max, op);
+                    long result = generateAndPrintCalculation((int) min, (int) max, op);
                     long inputtedResult = readNumber();
 
                     long endTime = System.currentTimeMillis();
@@ -65,27 +66,28 @@ public class Main {
         }
     }
 
-    public static long generateCalculation(int min, int max, Operation operation) {
+    public static long generateAndPrintCalculation(int min, int max, Operation operation) {
         long a = generateNumber(min, max);
         long b = generateNumber(min, max);
+        int nrCalcul = corecte + gresite + 1;
 
         switch (operation) {
             case ADDITION: {
-                String writtenOperation = String.format("%d %s %d = ", a, operation, b);
+                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
                 write(writtenOperation);
                 return a + b;
             }
             case MULTIPLICATION: {
-                String writtenOperation = String.format("%d %s %d = ", a, operation, b);
+                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
                 write(writtenOperation);
                 return a * b;
             }
             case SUBTRACTION: {
                 if (a > b) {
-                    write(String.format("%d %s %d = ", a, operation, b));
+                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b));
                     return a - b;
                 } else {
-                    write(String.format("%d %s %d = ", b, operation, a));
+                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, b, operation, a));
                     return b - a;
                 }
             }
