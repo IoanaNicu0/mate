@@ -66,7 +66,8 @@ public class Main {
                     Right answer: %s
                     Wrong answer: %s
                     Average duration: %ds
-                    """, corecte + gresite, corecte, gresite, durata / (corecte + gresite)));
+                    """, corecte + gresite, corecte, gresite,
+                    (corecte + gresite) == 0 ? 0 : durata / (corecte + gresite)));
         }
     }
 
