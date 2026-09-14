@@ -7,18 +7,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.time.Instant;
-import java.util.Random;
 import java.util.Scanner;
 
-import static org.fidami.mate.Utils.assureCarryForUnitsSubstraction;
-import static org.fidami.mate.Utils.units;
+import static org.fidami.mate.Utils.*;
 
 public class Main {
 
-    private static final String CALCULATION_TEMPLATE = "%d) %d %s %d = ";
+    private static final String CALCULATION_TEMPLATE = "%d) %s";
     static long min;
     static long max;
-    static Operation op;
+    static OperationEnum op;
     static int corecte = 0;
     static int gresite = 0;
     static long durata = 0;
@@ -32,25 +30,27 @@ public class Main {
                 try {
                     long startTime = System.currentTimeMillis();
 
-                    long result = generateAndPrintCalculation((int) min, (int) max, op);
+                    Operation operation = generateCalculation((int) min, (int) max, op);
+                    write(operation.getOperationText());
+
                     long inputtedResult = readNumber();
 
                     long endTime = System.currentTimeMillis();
                     long duration = endTime - startTime;
 
-                    if (result == inputtedResult) {
+                    if (operation.getResult() == inputtedResult) {
                         corecte++;
                         write("Bravo! Correct answer.");
                     } else {
                         write("Try again: ");
                         inputtedResult = readNumber();
 
-                        if (result == inputtedResult) {
+                        if (operation.getResult() == inputtedResult) {
                             corecte++;
                             write("Good job! Correct answer.");
                         } else {
                             gresite++;
-                            write("Wrong answer. The correct answer is: " + result);
+                            write("Wrong answer. The correct answer is: " + operation.getResult());
                         }
                     }
 
@@ -70,90 +70,86 @@ public class Main {
         }
     }
 
-    public static long generateAndPrintCalculation(int min, int max, Operation operation) {
-        long a = generateNumber(min, max);
-        long b = generateNumber(min, max);
+    public static Operation generateCalculation(int min, int max, OperationEnum operationEnum) {
+        return generateCalculation(min, max, operationEnum, Utils::generateNumber);
+    }
+
+    public static Operation generateCalculation(int min, int max, OperationEnum operationEnum, NumberGenerator generator) {
+        long a = generator.nextInt(min, max);
+        long b = generator.nextInt(min, max);
         int nrCalcul = corecte + gresite + 1;
 
-        switch (operation) {
+        Operation operation = new Operation();
+        operation.setOperation(operationEnum);
+
+        switch (operationEnum) {
             case ADDITION: {
-                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
-                write(writtenOperation);
-                return a + b;
+                operation.setTerms(new Terms(a, b));
+                operation.setResult(a + b);
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
             case ADDITION_CARRY: {
-                while (units(a) + units(b) < 10)
-                {
-                    a = generateNumber(min, max);
-                    b = generateNumber(min, max);
+                while (units(a) + units(b) < 10) {
+                    a = generator.nextInt(min, max);
+                    b = generator.nextInt(min, max);
                 }
-
-                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
-                write(writtenOperation);
-                return a + b;
+                operation.setTerms(new Terms(a, b));
+                operation.setResult(a + b);
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
             case MULTIPLICATION: {
-                String writtenOperation = String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b);
-                write(writtenOperation);
-                return a * b;
+                operation.setTerms(new Terms(a, b));
+                operation.setResult(a * b);
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
             case SUBTRACTION: {
                 if (a > b) {
-                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, a, operation, b));
-                    return a - b;
+                    operation.setTerms(new Terms(a, b));
                 } else {
-                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, b, operation, a));
-                    return b - a;
+                    operation.setTerms(new Terms(b, a));
                 }
+                operation.setResult(operation.getTerms().a() - operation.getTerms().b());
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
             case SUBTRACTION_CARRY: {
-                if (a > b) {
-                    Terms termeni = assureCarryForUnitsSubstraction(a, b);
-                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, termeni.a(), operation, termeni.b()));
-                    return a - b;
-                } else {
-                    Terms termeni = assureCarryForUnitsSubstraction(b, a);
-                    write(String.format(CALCULATION_TEMPLATE, nrCalcul, termeni.a(), operation, termeni.b()));
-                    return b - a;
+                Terms termeni = assureCarryForUnitsSubstraction(a, b);
+
+                if (termeni.a() - termeni.b() < 0) {
+                    throw new ArithmeticException();
                 }
+
+                operation.setTerms(termeni);
+                operation.setResult(operation.getTerms().a() - operation.getTerms().b());
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
             case DIVISION: {
-                if (a == 0 && b == 0) throw new ArithmeticException();
-                long produs = a * b;
-                if (b == 0) {
-                    write(String.format("%d : %d = ", produs, a));
-                    return b;
-                } else {
-                    write(String.format("%d : %d = ", produs, b));
-                    return a;
+                if (a == 0 || b == 0) {
+                    throw new ArithmeticException();
                 }
+
+                long produs = a * b;
+                operation.setTerms(new Terms(produs, a));
+                operation.setResult(b);
+                operation.setOperationText(String.format(CALCULATION_TEMPLATE, nrCalcul, operation.print()));
+                return operation;
             }
+            default: throw new RuntimeException("How did i even get here?");
         }
-        throw new RuntimeException("How did i even get here?");
     }
 
-    public static int generateNumber(int min, int max) {
-        Random random = new Random();
-        return random.nextInt((max - min) + 1) + min;
-    }
-
-    public static void write(Object a) {
-        System.out.print(a);
-    }
-
-    public static long readNumber() {
-        Scanner scanner = new Scanner(System.in);
-        return scanner.nextLong();
-    }
-
-    public static Operation getOperation(String s) {
+    public static OperationEnum getOperation(String s) {
         return switch (s) {
-            case "+" -> Operation.ADDITION;
-            case "++" -> Operation.ADDITION_CARRY;
-            case "-" -> Operation.SUBTRACTION;
-            case "--" -> Operation.SUBTRACTION_CARRY;
-            case "x" -> Operation.MULTIPLICATION;
-            case ":" -> Operation.DIVISION;
+            case "+" -> OperationEnum.ADDITION;
+            case "++" -> OperationEnum.ADDITION_CARRY;
+            case "-" -> OperationEnum.SUBTRACTION;
+            case "--" -> OperationEnum.SUBTRACTION_CARRY;
+            case "x" -> OperationEnum.MULTIPLICATION;
+            case ":" -> OperationEnum.DIVISION;
             default -> throw new IllegalArgumentException("Invalid operation: " + s);
         };
     }
@@ -172,11 +168,24 @@ public class Main {
 
     private static void setupLimits() {
         Scanner scanner = new Scanner(System.in);
-        write("min = ");
-        min = readNumber();
-        write("max = ");
-        max = readNumber();
-        write("calcul (+ ++ - -- x :) = ");
-        op = getOperation(scanner.next());
+        boolean validNumbers = false;
+
+        while (!validNumbers) {
+            write("min = ");
+            min = readNumber();
+            write("max = ");
+            max = readNumber();
+            validNumbers = validateLimits(min, max);
+        }
+
+        while (op == null) {
+            try {
+                write("calcul (+ ++ - -- x :) = ");
+                op = getOperation(scanner.next());
+            } catch (IllegalArgumentException e) {
+                write("Operatie invalida. Mai incearca.\n");
+            }
+        }
+
     }
 }
