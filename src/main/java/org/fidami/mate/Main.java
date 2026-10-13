@@ -20,6 +20,7 @@ public class Main {
     static int corecte = 0;
     static int gresite = 0;
     static long durata = 0;
+    static int reincercate = 0;
 
     public static void main(String[] args) throws FileNotFoundException {
         setupLogging();
@@ -43,6 +44,7 @@ public class Main {
                         write("Bravo! Correct answer.");
                     } else {
                         write("Try again: ");
+                        reincercate++;
                         inputtedResult = readNumber();
 
                         if (operation.getResult() == inputtedResult) {
@@ -65,8 +67,9 @@ public class Main {
                     Total: %s
                     Right answer: %s
                     Wrong answer: %s
+                    Retried: %s
                     Average duration: %ds
-                    """, corecte + gresite, corecte, gresite,
+                    """, corecte + gresite, corecte, gresite, reincercate,
                     (corecte + gresite) == 0 ? 0 : durata / (corecte + gresite)));
         }
     }
