@@ -21,6 +21,8 @@ public class Main {
     static int gresite = 0;
     static long durata = 0;
     static int reincercate = 0;
+    static long durataMin = Long.MAX_VALUE;
+    static long durataMax = Long.MIN_VALUE;
 
     public static void main(String[] args) throws FileNotFoundException {
         setupLogging();
@@ -57,6 +59,8 @@ public class Main {
                     }
 
                     durata += duration / 1000;
+                    durataMin = Math.min(durataMin, duration / 1000);
+                    durataMax = Math.max(durataMax, duration / 1000);
                     write(" (" + duration / 1000 + "s). \n\r\n\r");
                 } catch (ArithmeticException supressed) {
                 }
@@ -69,8 +73,12 @@ public class Main {
                     Wrong answer: %s
                     Retried: %s
                     Average duration: %ds
+                    Min duration: %ds
+                    Max duration: %ds
                     """, corecte + gresite, corecte, gresite, reincercate,
-                    (corecte + gresite) == 0 ? 0 : durata / (corecte + gresite)));
+                    (corecte + gresite) == 0 ? 0 : durata / (corecte + gresite),
+                    durataMin == Long.MAX_VALUE ? 0 : durataMin,
+                    durataMax == Long.MIN_VALUE ? 0 : durataMax));
         }
     }
 
